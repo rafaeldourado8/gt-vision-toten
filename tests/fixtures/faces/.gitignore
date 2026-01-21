@@ -1,0 +1,8 @@
+# Ignora todas as fotos reais
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+# Mantém o README
+!README.md

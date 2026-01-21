@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  # MediaMTX - Streaming Server
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: gtvision-mediamtx
+    ports:
+      - "8554:8554"  # RTSP
+      - "8888:8888"  # HLS
+      - "8889:8889"  # WebRTC
+      - "9997:9997"  # API
+      - "9998:9998"  # Metrics
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro
+    restart: unless-stopped
+    networks:
+      - gtvision-network
+
+  # PostgreSQL - Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: gtvision-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=gtvision
+      - POSTGRES_USER=gtvision
+      - POSTGRES_PASSWORD=gtvision123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - gtvision-network
+
+  # Redis - Cache & Session
+  redis:
+    image: redis:7-alpine
+    container_name: gtvision-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - gtvision-network
+
+  # RabbitMQ - Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: gtvision-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=gtvision
+      - RABBITMQ_DEFAULT_PASS=gtvision123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+    networks:
+      - gtvision-network
+
+  # API - FastAPI Backend
+  api:
+    build:
+      context: .
+      dockerfile: docker/api/Dockerfile
+    container_name: gtvision-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://gtvision:gtvision123@postgres:5432/gtvision
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://gtvision:gtvision123@rabbitmq:5672/
+      - MEDIAMTX_API_URL=http://mediamtx:9997
+      - MEDIAMTX_API_USER=mediamtx_api_user
+      - MEDIAMTX_API_PASS=GtV!sionMed1aMTX$$2025
+      - MEDIAMTX_HLS_URL=http://mediamtx:8888
+      - STORAGE_PATH=/app/storage
+    volumes:
+      - ./storage:/app/storage
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+      - mediamtx
+    restart: unless-stopped
+    networks:
+      - gtvision-network
+
+  # Worker - Background Tasks
+  worker:
+    build:
+      context: .
+      dockerfile: docker/worker/Dockerfile
+    container_name: gtvision-worker
+    environment:
+      - DATABASE_URL=postgresql://gtvision:gtvision123@postgres:5432/gtvision
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://gtvision:gtvision123@rabbitmq:5672/
+      - MEDIAMTX_HLS_URL=http://mediamtx:8888
+    volumes:
+      - ./storage:/app/storage
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+      - mediamtx
+    restart: unless-stopped
+    networks:
+      - gtvision-network
+
+  # Frontend - React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gtvision-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+      - VITE_WS_URL=ws://localhost:8000
+      - VITE_HLS_URL=http://localhost:8888
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - gtvision-network
+
+networks:
+  gtvision-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
