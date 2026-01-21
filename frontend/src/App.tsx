@@ -3,10 +3,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { Layout } from './components/layout/Layout';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Cameras from './pages/Cameras';
-import Students from './pages/Students';
+import { Login } from './pages/Login';
+import { Dashboard } from './pages/Dashboard';
+import { Cameras } from './pages/Cameras';
+import { Students } from './pages/Students';
 
 const queryClient = new QueryClient({
   defaultOptions: {

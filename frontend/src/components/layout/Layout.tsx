@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import {LayoutDashboard, Camera, Users, SquareCheck as CheckSquare, BarChart3, Bell, Settings, LogOut, Menu, X, } from 'lucide-react';
 import { useAuthStore } from "../../stores/authStore";
-import { Avatar } from "../components/common/Avatar";
+import { Avatar } from "../common/Avatar";
 import toast from "react-hot-toast";
 
 export const Layout: React.FC = () => {
