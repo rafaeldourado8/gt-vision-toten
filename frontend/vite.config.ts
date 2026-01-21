@@ -27,6 +27,20 @@ export default defineConfig(({ mode }) => {
       'process.env.NODE_ENV': '"development"',
       '__DEV__': 'true',
     }
+  } else {
+    // Production optimizations
+    build = {
+      minify: 'esbuild',
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+            ui: ['lucide-react', 'framer-motion'],
+          },
+        },
+      },
+    }
   }
 
   return {

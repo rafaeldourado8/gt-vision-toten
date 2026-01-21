@@ -4,17 +4,25 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install pnpm
-RUN npm install -g pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
+# Copy dependency files
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
 
+# Install dependencies with cache mount
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --prefer-offline
+
+# Copy source files
 COPY . .
+
+# Build with production optimizations
 RUN pnpm run build
 
 # Production stage
 FROM nginx:alpine
 
+# Copy built files
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
