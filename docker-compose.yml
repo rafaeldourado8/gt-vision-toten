@@ -90,27 +90,27 @@ services:
     networks:
       - gtvision-network
 
-  # Worker - Background Tasks
-  worker:
-    build:
-      context: .
-      dockerfile: docker/worker/Dockerfile
-    container_name: gtvision-worker
-    environment:
-      - DATABASE_URL=postgresql://gtvision:gtvision123@postgres:5432/gtvision
-      - REDIS_URL=redis://redis:6379/0
-      - RABBITMQ_URL=amqp://gtvision:gtvision123@rabbitmq:5672/
-      - MEDIAMTX_HLS_URL=http://mediamtx:8888
-    volumes:
-      - ./storage:/app/storage
-    depends_on:
-      - postgres
-      - redis
-      - rabbitmq
-      - mediamtx
-    restart: unless-stopped
-    networks:
-      - gtvision-network
+  # Worker - Background Tasks (DESABILITADO - Serviço de IA)
+  # worker:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/worker/Dockerfile
+  #   container_name: gtvision-worker
+  #   environment:
+  #     - DATABASE_URL=postgresql://gtvision:gtvision123@postgres:5432/gtvision
+  #     - REDIS_URL=redis://redis:6379/0
+  #     - RABBITMQ_URL=amqp://gtvision:gtvision123@rabbitmq:5672/
+  #     - MEDIAMTX_HLS_URL=http://mediamtx:8888
+  #   volumes:
+  #     - ./storage:/app/storage
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #     - rabbitmq
+  #     - mediamtx
+  #   restart: unless-stopped
+  #   networks:
+  #     - gtvision-network
 
   # Frontend - React App
   frontend:
